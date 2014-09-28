@@ -44,7 +44,12 @@ class Model{
 	//SQL SELECT相关语句
 	protected  function query(){
 		$query="select $this->select from $this->from where $this->from limit $this->limit,$this->offset";
-		mysqli_query($this->dbc, $query);
+		$result=mysqli_query($this->dbc, $query) or die ('query fail');
+		$resultArray=array();
+		while ($row=mysqli_fetch_array($result, MYSQL_ASSOC )){
+			array_push($resultArray, $row);
+			return $resultArray;
+		}
 	}
 	
 	protected function get(String $from,$limit=100,$offset=0){
@@ -70,7 +75,7 @@ class Model{
 			$value_clause.=$value.',';
 		}
 		$query="insert into $this->from $key_clause  values $key_clause";
-		mysqli_query($this->dbc, $query);
+		mysqli_query($this->dbc, $query or die ('insert fail'));
 	} 
 	
 	//SQL UPDATE相关语句
@@ -82,14 +87,14 @@ class Model{
 			$update.=$key.'='.$value.',';
 		}
 		$query="update $this->from set $update";
-		mysqli_query($this->dbc, $query);
+		mysqli_query($this->dbc, $query) or die('update fail');
 	}
 //SQL DELETE相关语句
 	protected function delete(String $from,$where_array){
 		$this->setFrom($from);
 		$this->setWhere($where_array);
 		$query="delete from $this->from where $this->where";
-		mysqli_query($this->dbc, $query);		
+		mysqli_query($this->dbc, $query) or die ('delete fail');		
 	}
 	
 	function __destruct(){

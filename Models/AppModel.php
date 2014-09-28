@@ -5,6 +5,10 @@ class AppModel extends Model {
 			parent::__construct();
 		}
 		
+		function insertApp($data){
+			$this->insert('app', $data);	
+		}
+		
 		function __destruct(){
 			parent::__destruct();
 		}
