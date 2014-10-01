@@ -1,0 +1,12 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Download View</title>
+</head>
+<body>
+{foreach $data as $aData}
+	<a href=index.php?DownloadFile&download&{$aData.app_id}>{$aData.app_name}</a>
+{/foreach}
+</body>
+</html>

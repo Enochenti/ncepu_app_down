@@ -1,105 +1,96 @@
 <?php
-//模型主类，所有其他对数据进行操作的模型类都必须继承此类
-
-class Model{
-	private final $host='localhost';
-	private final $user='root';
-	private final $pass='1901101444';
-	private final $db='ncepuappdown';
+// 模型主类，所有其他对数据进行操作的模型类都必须继承此类
+class Model {
+	const host = 'localhost';
+	const user = 'root';
+	const pass = '1901101444';
+	const db = 'ncepuappdown';
 	
-	protected  $dbc;
+	protected $dbc;
+	protected $select = '*';
+	protected $from = '';
+	protected $where = '';
+	protected $limit = 500;
+	protected $offset = 0;
 	
-	protected $select='*';
-	protected $from='';
-	protected $where='';
-	protected $limit=500;
-	protected $offset=0;
-	
-	function __construct(){
-		$this->dbc=mysqli_connect($this->host,$this->user,$this->pass,$this->db);
+	function __construct($from) {
+		$this->dbc = mysqli_connect ( self::host, self::user, self::pass, self::db );
+		$this->setFrom($from);
 	}
 	
-	//设置SQL语句中各子句参数
-	protected function setSelect(String $select){
-		$this->select=$select;
+	// 设置SQL语句中各子句参数
+	protected function setSelect($select) {
+		$this->select = $select;
+	}
+	protected function setFrom($from) {
+		$this->from = $from;
+	}
+	protected function setWhere($where = '') {
+		$this->where = $where;
+	}
+	protected function setLimit($offset = 0, $limit = 500) {
+		$this->limit = $limit;
+		$this->offset = $offset;
 	}
 	
-	protected function setFrom(String $from){
-		$this->from=$from;
-	}
-	
-	protected function setWhere($where_array){
-		$where='';
-		foreach($where_array as $key => $value){
-			$where.=$key.'='.$value.',';
+	// SQL SELECT相关语句
+	protected function query() {
+		if (! empty ( $this->where ))
+			$query = "select $this->select from $this->from where $this->where limit $this->offset,$this->limit";
+		else
+			$query = "select $this->select from $this->from limit $this->offset,$this->limit";
+		$result = mysqli_query ( $this->dbc, $query ) or die ( 'query fail' );
+		$resultArray = array ();
+		while ( $row = mysqli_fetch_array ( $result, MYSQL_ASSOC ) ) {
+			array_push ( $resultArray, $row );
 		}
-		$this->where=$where;
+		return $resultArray;
+	}
+	protected function get( $offset = 0, $limit = 500) {
+		$this->setLimit ( $offset, $limit );
+		return $this->query ();
+	}
+	protected function getWhereData($where, $offset = 0, $limit = 500) {
+		$this->setWhere ( $where );
+		$this->setLimit ( $offset, $limit );
+		$this->query ();
 	}
 	
-	protected function setLimit($limit=100,$offset=0){
-		$this->limit=$limit;
-		$this->offset=$offset;
-	}
-	
-	//SQL SELECT相关语句
-	protected  function query(){
-		$query="select $this->select from $this->from where $this->from limit $this->limit,$this->offset";
-		$result=mysqli_query($this->dbc, $query) or die ('query fail');
-		$resultArray=array();
-		while ($row=mysqli_fetch_array($result, MYSQL_ASSOC )){
-			array_push($resultArray, $row);
-			return $resultArray;
+	// SQL INSERT相关语句
+	protected function insert( $data) {
+		$key_clause = '';
+		$value_clause = '';
+		foreach ( $data as $key => $value ) {
+			$key_clause .= $key . ',';
+			$value_clause .= "'$value',";
 		}
+		
+		$key_clause = rtrim ( $key_clause, ',' );
+		$value_clause = rtrim ( $value_clause, ',' );
+		
+		$query = "insert into $this->from ($key_clause)  values ($value_clause)";
+		return mysqli_query ( $this->dbc, $query ) or die ( 'failed to insert' );
 	}
 	
-	protected function get(String $from,$limit=100,$offset=0){
-		$this->setFrom($from);
-		$this->setLimit($limit,$offset);
-		$this->query();
-	}
-	
-	protected function getWhereData(String $table,$where_array,$limit=100,$offset=0){
-		$this->setFrom($from);
-		$this->setWhere($where_array);
-		$this->setLimit($limit,$offset);
-		$this->query();
-	}
-	
-	//SQL INSERT相关语句
-	protected function insert(String $from,$data){
-		$this->setFrom($from);
-		$key_clause='';
-		$value_clause='';
-		foreach ($data as $key => $value){
-			$key_clause.=$key.',';
-			$value_clause.=$value.',';
+	// SQL UPDATE相关语句
+	protected function update( $data, $where) {
+		$this->setWhere ( $where );
+		$update = '';
+		foreach ( $data as $key => $value ) {
+			$update .= "$key='$value',";
 		}
-		$query="insert into $this->from $key_clause  values $key_clause";
-		mysqli_query($this->dbc, $query or die ('insert fail'));
-	} 
-	
-	//SQL UPDATE相关语句
-	protected function update(String $from,$data,$where_array){
-		$this->setFrom($from);
-		$this->setWhere($where_array);
-		$update='';
-		foreach ($data as $key => $value){
-			$update.=$key.'='.$value.',';
-		}
-		$query="update $this->from set $update";
-		mysqli_query($this->dbc, $query) or die('update fail');
+		rtrim ( $update, ',' );
+		$query = "update $this->from set $update where $this->where";
+		return mysqli_query ( $this->dbc, $query ) or die ( 'update fail' );
 	}
-//SQL DELETE相关语句
-	protected function delete(String $from,$where_array){
-		$this->setFrom($from);
-		$this->setWhere($where_array);
-		$query="delete from $this->from where $this->where";
-		mysqli_query($this->dbc, $query) or die ('delete fail');		
+	// SQL DELETE相关语句
+	protected function delete( $where) {
+		$this->setWhere ( $where );
+		$query = "delete from $this->from where $this->where";
+		return mysqli_query ( $this->dbc, $query ) or die ( 'delete fail' );
 	}
-	
-	function __destruct(){
-		mysqli_close($this->dbc);
+	function __destruct() {
+		mysqli_close ( $this->dbc );
 	}
-	
 }
 ?>
