@@ -15,6 +15,7 @@ class Model {
 	
 	function __construct($from) {
 		$this->dbc = mysqli_connect ( self::host, self::user, self::pass, self::db );
+	    mysqli_query($this->dbc, "set names 'utf8'");
 		$this->setFrom($from);
 	}
 	
