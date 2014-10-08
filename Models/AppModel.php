@@ -9,8 +9,7 @@ class AppModel extends Model {
 			$this->insert( $data);	
 		}
 		
-		function getApp($select,$where='', $offset = 0, $limit = 500){
-			$this->setLimit( $offset ,$limit);
+		function getApp($select,$where){
 			$this->setSelect($select);
 			$this->setWhere($where);
 			return $this->get();
